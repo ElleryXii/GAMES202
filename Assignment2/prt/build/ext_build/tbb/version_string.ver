@@ -1,0 +1,11 @@
+#define __TBB_VERSION_STRINGS(N) \
+#N": BUILD_HOST         Darwin" ENDL \
+#N": BUILD_OS           Darwin-20.5.0" ENDL \
+#N": BUILD_KERNEL       20.5.0" ENDL \
+#N": BUILD_GCC          AppleClang" ENDL \
+#N": BUILD_LIBC         Unknown" ENDL \
+#N": BUILD_LD           Unknown" ENDL \
+#N": BUILD_TARGET       Unknown" ENDL \
+#N": BUILD_COMMAND      Unknown" ENDL
+
+#define __TBB_DATETIME "Wed, 02 Jun 2021 09:06:57 +0800"

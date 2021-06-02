@@ -86,7 +86,7 @@ void uniformDiskSamples( const in vec2 randomSeed ) {
 }
 
 
-#define LIGHT_WIDTH 0.005
+#define LIGHT_WIDTH 0.008
 
 //Returns avg blocker depth
 float findBlocker( sampler2D shadowMap,  vec2 uv,  float zReceiver) 
@@ -96,8 +96,9 @@ float findBlocker( sampler2D shadowMap,  vec2 uv,  float zReceiver)
   int num_blockers = 0;
   for(int i=0; i<NUM_SAMPLES; i++)
   {
-    vec2 texcoords = poissonDisk[i]*LIGHT_WIDTH + uv;
-    float zblocker = unpack(texture2D(shadowMap, texcoords));
+    //approximation - region to search is larger if light size is larger? 
+    vec2 coords = poissonDisk[i]*LIGHT_WIDTH + uv;
+    float zblocker = unpack(texture2D(shadowMap, coords));
     if (zReceiver > zblocker+0.02){
         dTotal += zblocker;
         num_blockers += 1;
@@ -134,7 +135,7 @@ float PCSS(sampler2D shadowMap, vec3 coords)
 
 float useShadowMap(sampler2D shadowMap, vec3 shadowCoord){
   float z = unpack(texture2D(shadowMap, shadowCoord.xy));
-  return shadowCoord.z > z + 0.008 ? 0.0 : 1.0;
+  return shadowCoord.z > z + 0.015 ? 0.0 : 1.0;
 }
 
 vec3 blinnPhong() {
@@ -166,12 +167,11 @@ void main(void) {
   // float visibility = useShadowMap(uShadowMap, shadowCoord);
 
   // PCF
-  // float visibility = PCF(uShadowMap, shadowCoord, 0.003);g
+  // float visibility = PCF(uShadowMap, shadowCoord, 0.003);
 
   // PCSS
   float visibility = PCSS(uShadowMap, shadowCoord);
 
   vec3 phongColor = blinnPhong();
   gl_FragColor = vec4(phongColor*visibility,1.0);
-
 }
