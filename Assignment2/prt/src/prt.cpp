@@ -14,8 +14,7 @@ NORI_NAMESPACE_BEGIN
 namespace ProjEnv
 {
     std::vector<std::unique_ptr<float[]>>
-    LoadCubemapImages(const std::string &cubemapDir, int &width, int &height,
-                      int &channel)
+    LoadCubemapImages(const std::string &cubemapDir, int &width, int &height, int &channel)
     {
         std::vector<std::string> cubemapNames{"negx.jpg", "posx.jpg", "posy.jpg",
                                               "negy.jpg", "posz.jpg", "negz.jpg"};
@@ -63,8 +62,7 @@ namespace ProjEnv
         return std::atan2(x * y, std::sqrt(x * x + y * y + 1.0));
     }
 
-    float CalcArea(const float &u_, const float &v_, const int &width,
-                   const int &height)
+    float CalcArea(const float &u_, const float &v_, const int &width, const int &height)
     {
         // transform from [0..res - 1] to [- (1 - 1 / res) .. (1 - 1 / res)]
         // ( 0.5 is for texel center addressing)
@@ -117,6 +115,7 @@ namespace ProjEnv
         for (int i = 0; i < SHNum; i++)
             SHCoeffiecents[i] = Eigen::Array3f(0);
         float sumWeight = 0;
+        //Sampling each point to project the light_env onto the SHs.
         for (int i = 0; i < 6; i++)
         {
             for (int y = 0; y < height; y++)
@@ -125,13 +124,26 @@ namespace ProjEnv
                 {
                     // TODO: here you need to compute light sh of each face of cubemap of each pixel
                     // TODO: 此处你需要计算每个像素下cubemap某个面的球谐系数
-                    Eigen::Vector3f dir = cubemapDirs[i * width * height + y * width + x];
+                    Eigen::Vector3d dir = cubemapDirs[i * width * height + y * width + x].cast<double>();
                     int index = (y * width + x) * channel;
-                    Eigen::Array3f Le(images[i][index + 0], images[i][index + 1],
-                                      images[i][index + 2]);
+                    Eigen::Array3f Le(images[i][index + 0], images[i][index + 1], images[i][index + 2]);
+
+                    auto dw = CalcArea(x, y, width, height);
+
+                    sumWeight += dw;
+
+					for (int l = 0; l <= SHOrder; ++l) {
+						for (int m = -l; m <= l; ++m) {
+							int coeffIndex = sh::GetIndex(l,m);
+							SHCoeffiecents[coeffIndex] +=  Le * sh::EvalSH(l,m,dir.normalized()) * dw;
+						}
+					}
+
                 }
             }
         }
+        for (int i = 0; i <= SHCoeffiecents.size(); i++)
+            SHCoeffiecents[i] /= sumWeight;
         return SHCoeffiecents;
     }
 }
@@ -210,7 +222,9 @@ public:
                 {
                     // TODO: here you need to calculate unshadowed transport term of a given direction
                     // TODO: 此处你需要计算给定方向下的unshadowed传输项球谐函数值
+                    
                     return 0;
+                    
                 }
                 else
                 {
