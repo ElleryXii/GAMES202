@@ -122,8 +122,8 @@ namespace ProjEnv
             {
                 for (int x = 0; x < width; x++)
                 {
-                    // TODO: here you need to compute light sh of each face of cubemap of each pixel
-                    // TODO: 此处你需要计算每个像素下cubemap某个面的球谐系数
+                    // Compute light sh of each face of cubemap of each pixel
+                    // 计算每个像素下cubemap某个面的球谐系数
                     Eigen::Vector3d dir = cubemapDirs[i * width * height + y * width + x].cast<double>();
                     int index = (y * width + x) * channel;
                     Eigen::Array3f Le(images[i][index + 0], images[i][index + 1], images[i][index + 2]);
@@ -198,8 +198,7 @@ public:
         std::ofstream lightFout(lightPath.str());
         std::ofstream fout(transPath.str());
         int width, height, channel;
-        std::vector<std::unique_ptr<float[]>> images =
-            ProjEnv::LoadCubemapImages(cubePath.str(), width, height, channel);
+        std::vector<std::unique_ptr<float[]>> images = ProjEnv::LoadCubemapImages(cubePath.str(), width, height, channel);
         auto envCoeffs = ProjEnv::PrecomputeCubemapSH<SHOrder>(images, width, height, channel);
         m_LightCoeffs.resize(3, SHCoeffLength);
         for (int i = 0; i < envCoeffs.size(); i++)
@@ -215,22 +214,28 @@ public:
         {
             const Point3f &v = mesh->getVertexPositions().col(i);
             const Normal3f &n = mesh->getVertexNormals().col(i);
+            //Transport function, shouldn't have anything to do with actual lighting.
             auto shFunc = [&](double phi, double theta) -> double {
                 Eigen::Array3d d = sh::ToVector(phi, theta);
                 const auto wi = Vector3f(d.x(), d.y(), d.z());
                 if (m_Type == Type::Unshadowed)
                 {
-                    // TODO: here you need to calculate unshadowed transport term of a given direction
-                    // TODO: 此处你需要计算给定方向下的unshadowed传输项球谐函数值
-                    
-                    return 0;
-                    
+                    // Calculate unshadowed transport term of a given direction
+                    // 计算给定方向下的unshadowed传输项球谐函数值
+                    return std::max(n.dot(wi), 0.0f);
                 }
                 else
                 {
                     // TODO: here you need to calculate shadowed transport term of a given direction
                     // TODO: 此处你需要计算给定方向下的shadowed传输项球谐函数值
-                    return 0;
+                    // Compared to unshadowed, we need to take visibility into account here.
+                    Ray3f ray(v, wi.normalized());
+                    double vis = 1.0;
+                    if (scene->rayIntersect(ray))
+                    {
+                        vis = 0.0;
+                    }
+                    return vis * std::max(n.dot(wi), 0.0f);
                 }
             };
             auto shCoeff = sh::ProjectFunction(SHOrder, shFunc, m_SampleCount);
