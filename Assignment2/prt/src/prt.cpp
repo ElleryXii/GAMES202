@@ -222,12 +222,13 @@ public:
                 {
                     // Calculate unshadowed transport term of a given direction
                     // 计算给定方向下的unshadowed传输项球谐函数值
+                    // Not considering shadow, normal/viewing angle is the only thing affecting radiance
                     return std::max(n.dot(wi), 0.0f);
                 }
                 else
                 {
-                    // TODO: here you need to calculate shadowed transport term of a given direction
-                    // TODO: 此处你需要计算给定方向下的shadowed传输项球谐函数值
+                    // Calculate shadowed transport term of a given direction
+                    // 计算给定方向下的shadowed传输项球谐函数值
                     // Compared to unshadowed, we need to take visibility into account here.
                     Ray3f ray(v, wi.normalized());
                     double vis = 1.0;
@@ -294,10 +295,10 @@ public:
         // TODO: you need to delete the following four line codes after finishing your calculation to SH,
         //       we use it to visualize the normals of model for debug.
         // TODO: 在完成了球谐系数计算后，你需要删除下列四行，这四行代码的作用是用来可视化模型法线
-        if (c.isZero()) {
-            auto n_ = its.shFrame.n.cwiseAbs();
-            return Color3f(n_.x(), n_.y(), n_.z());
-        }
+        // if (c.isZero()) {
+        //     auto n_ = its.shFrame.n.cwiseAbs();
+        //     return Color3f(n_.x(), n_.y(), n_.z());
+        // }
         return c;
     }
 

@@ -122,6 +122,9 @@ vec3 GetGBufferDiffuse(vec2 uv) {
  *
  */
 vec3 EvalDiffuse(vec3 wi, vec3 wo, vec2 uv) {
+  vec3 diffuse = GetGBufferDiffuse(uv);
+  vec3 normal = GetScreenCoordinate(GetGBufferNormalWorld(uv));
+  
   vec3 L = vec3(0.0);
   return L;
 }
@@ -132,8 +135,9 @@ vec3 EvalDiffuse(vec3 wi, vec3 wo, vec2 uv) {
  *
  */
 vec3 EvalDirectionalLight(vec2 uv) {
-  vec3 Le = vec3(0.0);
-  return Le;
+  vec3 Le = vec3(1.0);
+  float vis = GetGBufferuShadow(uv);
+  return Le*vis;
 }
 
 bool RayMarch(vec3 ori, vec3 dir, out vec3 hitPos) {
